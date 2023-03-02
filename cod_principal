@@ -1,0 +1,1383 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import time
+from selenium.webdriver.firefox.options import Options
+import pyautogui
+import pandas as pd
+import os
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import PyPDF2
+import re
+from openpyxl import load_workbook
+from docx2pdf import convert
+from validate_docbr import CPF
+from bs4 import BeautifulSoup
+from validate_email import validate_email
+
+usuario = "WNT_ADM\ELK347645"
+senha = "Xveag(466"
+usuario2 = "ELK347645"
+usuario3 = usuario2.upper()
+senha2 = "Xveag(466"
+
+options = Options()
+options.binary_location = r'C:\Users\u347645\AppData\Local\Mozilla Firefox\firefox.exe'
+navegador = webdriver.Firefox(executable_path=r'C:\\Users\\u347645\\OneDrive - IBERDROLA S.A\\1. DS_DOCS\\Python\\geckodriver.exe', options=options)
+navegador.get("about:preferences")
+navegador.maximize_window()
+time.sleep(3)
+pyautogui.typewrite("pdf")
+wait = WebDriverWait(navegador, 20)
+time.sleep(1)
+
+while navegador.find_element(By.CSS_SELECTOR, "#handlersView > richlistitem:nth-child(5) > hbox:nth-child(1) > hbox:nth-child(3)") == False:
+    print("NÃO ENCONTROU")
+    time.sleep(3)
+print("agora foi")
+clicar = navegador.find_element(By.CSS_SELECTOR, "#handlersView > richlistitem:nth-child(5) > hbox:nth-child(1) > hbox:nth-child(3)")
+clicar.click()
+time.sleep(1)
+pyautogui.press('tab')
+pyautogui.press('tab')
+pyautogui.press('tab')
+pyautogui.press('tab')
+pyautogui.press('down')
+pyautogui.press('down')
+
+#Entrando no site do SAW
+navegador.get("http://saw-coelba/Pages/Default.aspx")
+navegador.maximize_window()
+time.sleep(10)
+#Aqui, o programa clica no campo de login e insere
+login_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#txtUsername")))
+login_usuario.send_keys(usuario)
+
+#Aqui, o programa clica no campo de senha e insere
+login_senha = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#txtPassword")))
+login_senha.send_keys(senha)
+
+#Aqui, o programa clica no campo de login por administrador
+entrar = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#btnAdminLog")))
+entrar.click()
+
+pyautogui.click(50,80); #Click padrão
+time.sleep(4)
+pyautogui.typewrite(usuario3) #Insere o usuário modificado
+pyautogui.press('tab') #Pula para o próximo campo
+pyautogui.typewrite(senha2) #Senha
+pyautogui.press('enter')
+pyautogui.typewrite(usuario3) #Insere o usuário modificado
+pyautogui.press('tab') #Pula para o próximo campo
+pyautogui.typewrite(senha2) #Senha
+pyautogui.press('enter')
+time.sleep(4)
+for i in range(10):
+    try:
+        # navegador.get("http://saw-coelba/atendimento/Pages/fale-conosco-view.aspx")
+        wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#ctl00_FooterSiteMapAV_rptAreas_ctl02_AreaItem > ul:nth-child(3) > li:nth-child(1) > a:nth-child(2)')))
+        break
+    except NoSuchElementException:
+        navegador.get("http://saw-coelba/Pages/Default.aspx")
+        navegador.maximize_window()
+        time.sleep(5)
+        login_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#txtUsername")))
+        login_usuario.send_keys(usuario)
+        login_senha = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#txtPassword")))
+        login_senha.send_keys(senha)
+        entrar = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "#btnAdminLog")))
+        entrar.click()
+        pyautogui.click(50,80); #Click padrão
+        time.sleep(4)
+        pyautogui.typewrite(usuario3) #Insere o usuário modificado
+        pyautogui.press('tab') #Pula para o próximo campo
+        pyautogui.typewrite(senha2) #Senha
+        pyautogui.press('enter')
+        pyautogui.typewrite(usuario3) #Insere o usuário modificado
+        pyautogui.press('tab') #Pula para o próximo campo
+        pyautogui.typewrite(senha2) #Senha
+        pyautogui.press('enter')
+        time.sleep(4)
+        continue
+#--INÍCIO AUTOMAÇÃO------------------------------------------------------------
+
+#Reconhecemos a tabela que contém todos os códigos de protocolo ativos
+tabela = pd.read_excel("Teste.xlsx")
+tabela_prot1 = tabela[tabela["TIPO"]==1]
+tabela_prot2 = tabela[tabela["TIPO"]==2]
+
+################################ LOOPING PROTOCOLO 1 ##########################
+for sequencia_linhas, protocolo in enumerate(tabela_prot1["PROTOCOLO IN"]): #Coluna que usaremos como referência
+    chave_prot = tabela_prot1.loc[sequencia_linhas, "NOME"]
+    print("Estamos no protocolo", sequencia_linhas)
+    #Criando a primeira lista da pasta de downloads
+    time.sleep(1)
+    lista1 = os.listdir("C:\\Users\\u347645\\Downloads")
+    navegador.get("http://saw-coelba/atendimento/Pages/fale-conosco-view.aspx")
+
+    #Definir todas as variáveis das perguntas antes de dar append
+    try:
+        #Insere o protocolo coringa
+        protocolo00 = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#ctl00_PlaceHolderMain_crudFilter_txtProtocolo')))
+        protocolo00.send_keys("12345678901")
+    
+        #Pesquisa o protocolo coringa
+        protocolo2_click = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_PlaceHolderMain_crudFilter_btnPesquisar"]')))
+        protocolo2_click.click()
+
+        #Limpa o resultado
+        limpar_click = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_PlaceHolderMain_crudFilter_btnClearResults"]')))
+        limpar_click.click()
+
+        #Espera aparecer a mensagem de "não encontrado"
+        ndisp = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#ctl00_PlaceHolderMain_crudList_lblNonRegister')))
+        ndisp.click()
+
+        #Imput do primeiro protocolo correto
+        protocolo1 = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#ctl00_PlaceHolderMain_crudFilter_txtProtocolo')))
+        protocolo1.send_keys(protocolo)
+    
+        #Pesquisa o protocolo
+        protocolo2_click = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ctl00_PlaceHolderMain_crudFilter_btnPesquisar"]')))
+        protocolo2_click.click()
+    except:
+        print("Protocolo ", protocolo, "erro na página do SAW")
+        wb = load_workbook('OUTPUT.xlsx')
+        ws = wb.active
+        to_append = ["1.ERRO", protocolo, "ERRO NA PÁGINA DO SAW"]
+        ws.append(to_append)
+        wb.save('OUTPUT.xlsx')
+        continue
+
+    #Check se está disponível, se retornar erro, reinicia o loop e passa para o próximo protocolo
+    try:
+        time.sleep(5)
+        navegador.find_element(By.XPATH, "//*[@id='ctl00_PlaceHolderMain_crudList_gvSWFaleConosco_ctl02_lnkProtocoloID']").click()
+    except NoSuchElementException: #É o erro que o python retorna
+        print("Protocolo ", protocolo, "não encontrado")
+        wb = load_workbook('OUTPUT.xlsx')
+        ws = wb.active
+        to_append = ["1.ERRO", protocolo, "PROTOCOLO NÃO ENCONTRADO"]
+        ws.append(to_append)
+        wb.save('OUTPUT.xlsx')
+        continue #O continue reinicia o looping, o break encerra o looping, o pass passa para a próxima linha ignorando o erro
+
+    ######################### DOUBLE CHECK RESPOSTAS ##############################
+    #################### EXTRAÇÃO DIRETA DO HTML DA PÁGINA ########################
+    time.sleep(1)
+    navegador.switch_to.frame(0)
+    time.sleep(1)
+    URL_ATUAL = BeautifulSoup(navegador.page_source, 'lxml')
+    time.sleep(1)
+    # LOCALIDADE
+    try:
+        for localidade_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl00_ltEmpLocalidade"}):
+            print(localidade_html)
+            localidade_html = str(localidade_html)
+    except:
+        localidade_html = "LOCALIDADE NÃO ENCONTRADA (FIM)"
+
+    # CREDENCIADO RESPONSÁVEL
+    try:
+        for credenciado_responsavel in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl00_ltEmpAgenteCred"}):
+            print(credenciado_responsavel)
+            credenciado_responsavel = str(credenciado_responsavel)
+    except:
+        credenciado_responsavel = "CREDENCIADO NÃO ENCONTRADO(A) (FIM)"
+
+    # NOME
+    try:
+        for nome_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormNome"}):
+            print(nome_html)
+            nome_html = str(nome_html)
+    except:
+        nome_html = "NOME NÃO ENCONTRADO (FIM)"
+
+    # ENDERECO
+    try:
+        for endereco_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormEndereco"}):
+            print(endereco_html)
+            endereco_html = str(endereco_html)
+    except:
+        endereco_html = "ENDEREÇO NÃO ENCONTRADO (FIM)"
+
+    # BAIRRO
+    try:
+        for bairro_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormBairro"}):
+            print(bairro_html)
+            bairro_html = str(bairro_html)
+    except:
+        bairro_html = "BAIRRO NÃO ENCONTRADO (FIM)"
+
+    # CEP
+    try:
+        for cep_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormCEP"}):
+            print(cep_html)
+            cep_html = str(cep_html)
+    except:
+        cep_html = "CEP NÃO ENCONTRADO (FIM)"
+
+    # ESTADO
+    try:
+        for estado_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormEstado"}):
+            print(estado_html)
+            estado_html = str(estado_html)
+    except:
+        estado_html = "ESTADO NÃO ENCONTRADO (FIM)"
+
+    # TELEFONE
+    try:
+        for telefone_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl01_ltfcFormTelefone"}):
+            print(telefone_html)
+            telefone_html = str(telefone_html)
+    except:
+        telefone_html = "TELEFONE NÃO ENCONTRADO (FIM)"
+
+    # POSTO DE ATENDIMENTO
+    try:
+        for posto_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl00_ltEmpPostoAtend"}):
+            print(posto_html)
+            posto_html = str(posto_html)
+    except:
+        posto_html = "POSTO NÃO ENCONTRADO (FIM)"
+
+    # DATA ABERTURA
+    try:
+        for abertura_html in URL_ATUAL.find("span", attrs={"id": "ctl00_PlaceHolderMain_crudDetail_ctl00_ltSolData"}):
+            print(abertura_html)
+            abertura_html = str(abertura_html)
+    except:
+        abertura_html = "DATA ABERTURA NÃO ENCONTRADO (FIM)"
+
+    #--DOWNLOAD DOS PDFs-----------------------------------------------------------
+    #A página de downloads está em um frame (pop-up), então temos que dar switch
+
+    try: #Arquivo 1
+        navegador.find_element(By.CSS_SELECTOR, "#ctl00_PlaceHolderMain_crudDetail_ctl01_rptAnexos_ctl00_lbfcArqNome").click()
+        arq1 = print("Arquivo 1 do protocolo ", protocolo, " encontrado")
+    except NoSuchElementException:
+        arq1 = print("Arquivo 1 do protocolo ", protocolo, " não encontrado")
+        pass
+    time.sleep(1)
+    try: #Arquivo 2
+        navegador.find_element(By.CSS_SELECTOR, "#ctl00_PlaceHolderMain_crudDetail_ctl01_rptAnexos_ctl01_lbfcArqNome").click()
+        arq2 = print("Arquivo 2 do protocolo ", protocolo, " encontrado")
+    except NoSuchElementException:
+        arq2 = print("Arquivo 2 do protocolo ", protocolo, " não encontrado")
+        pass
+    time.sleep(1)
+    try: #Arquivo 3
+        navegador.find_element(By.CSS_SELECTOR, "#ctl00_PlaceHolderMain_crudDetail_ctl01_rptAnexos_ctl02_lbfcArqNome").click()
+        arq3 = print("Arquivo 3 do protocolo ", protocolo, " encontrado")
+    except NoSuchElementException:
+        arq3 = print("Arquivo 3 do protocolo ", protocolo, " não encontrado")
+        pass
+    time.sleep(1)
+    try: #Arquivo 4
+        navegador.find_element(By.CSS_SELECTOR, "#ctl00_PlaceHolderMain_crudDetail_ctl01_rptAnexos_ctl03_lbfcArqNome").click()
+        arq4 = print("Arquivo 4 do protocolo ", protocolo, " encontrado")
+    except NoSuchElementException:
+        arq4 = print("Arquivo 4 do protocolo ", protocolo, " não encontrado")
+        pass
+    time.sleep(1)
+    try: #Arquivo 5
+        navegador.find_element(By.CSS_SELECTOR, "#ctl00_PlaceHolderMain_crudDetail_ctl01_rptAnexos_ctl04_lbfcArqNome").click()
+        arq5 = print("Arquivo 5 do protocolo ", protocolo, " encontrado")
+    except NoSuchElementException:
+        arq5 = print("Arquivo 5 do protocolo ", protocolo, " não encontrado")
+        pass
+
+    navegador.switch_to.default_content()
+    #Aqui vamos subtrair a lista1 da lista2, resultando em uma lista dos arquivos novos
+    lista2 = os.listdir(r"C:\Users\u347645\Downloads")
+    subtr = set(lista2)-set(lista1)
+    listaf = list(subtr)
+
+    #--SEPARANDO OS PDFs-----------------------------------------------------------
+    path = r'C:\Users\u347645\Downloads'
+    texto_com_espaco = ""
+    texto_sem_espaco = ""
+    chave1 = "F"
+    try:
+        for i in listaf:
+            caminho = str(path + "\\" + i)
+            caminho2 = caminho[-4:]
+            docx_lista = 0
+            if str(caminho2) == ".doc":
+                print("Protocolo ", protocolo, "não encontrado")
+                wb = load_workbook('OUTPUT.xlsx')
+                time.sleep(2)
+                ws = wb.active
+                to_append = ["1.ERRO", protocolo,"","ARQUIVO ENVIADO ESTÁ FORA DO PADRÃO (PDF)"]
+                ws.append(to_append)
+                wb.save('OUTPUT.xlsx')
+                time.sleep(2)
+                chave1 = "V"
+    except:
+        print("*************Não temos nenhum .doc")
+        chave1 = "F"
+        pass
+    if chave1 == "V":
+        continue
+    else:
+        pass
+    print("*************Chave1 = True")
+
+    try:
+        for i in listaf:
+            caminho = str(path + "\\" + i)
+            caminho2 = caminho[-4:]
+            docx_lista = 0
+            if str(caminho2) == "DOCX" or str(caminho2) == "docx":
+                print("DOCX encontrado")
+                lista3 = os.listdir("C:\\Users\\u347645\\Downloads")
+                time.sleep(1)
+                convert2 = convert(caminho)
+                time.sleep(7)
+                lista4 = os.listdir("C:\\Users\\u347645\\Downloads")
+                subtr2 = set(lista4)-set(lista3)
+                docx_lista2 = list(subtr2)
+                listaf2 = docx_lista2 + listaf
+                listaf = listaf2
+                print("Convertido com sucesso")
+            else:
+                print("-")
+    except:
+        pass
+    print("*************DOCX OK")
+    ## MAPEANDO PDF E ENCONTRANDO FORMULÁRIO
+    possibilidades = ["ROTEIRODEATENDIMENTO", "ROTEIRO DE ATENDIMENTO", "FORMULÁRIODELIGAÇÃONOVA", "FORMULÁRIO DE LIGAÇÃO NOVA", "ASSERTIVIDADE", "LIGAÇÃO NOVA", "LIGAÇÃONOVA", "EXISTEREDEAMENOS", "NÃOMODIFIQUEOFORMULÁRIO", "POISSERÃODEVOLVIDOS"]
+    possibilidadeserradas = ["ATENDIMENTOPARCELAMENTO", "TROCADETITU", "TROCADETITULARIDADE","TROCADETITULARIDADE", "ATENDIMENTOPARCELAMENTO", "ROTEIRODEATENDIMENTOPARCELAMENTO", "ATUALIZAÇÃO CADASTRAL", "ATUALIZAÇÃOCADASTRAL", "ANDAMENTO/LIBERAÇÃO DE SERVIÇO", "ANDAMENTO/LIBERAÇÃODESERVIÇO"]
+    for i in listaf:
+        caminho3 = str(path + "\\" + i)
+        caminho4 = caminho3[-4:] #Quero saber qual o formato do arquivo
+        if str(caminho4) == ".PDF" or str(caminho4) == ".pdf":
+            print("Protocolo ", protocolo, " - Testando o arquivo: ", i)
+            try:
+                with open(caminho3, mode='rb') as f:
+                    reader = PyPDF2.PdfFileReader(f)
+                    texto_testef = ''##<< IMPORTANTE PARA PEGAR TODAS AS PÁGINAS
+                    for page in reader.pages:##<< IMPORTANTE PARA PEGAR TODAS AS PÁGINAS
+                        texto_testef += page.extractText()##<< IMPORTANTE PARA PEGAR TODAS AS PÁGINAS
+                        texto_semespaco = texto_testef.upper().replace(" ", "").replace('\n', "").replace("=", ":")##Maiusc, sem espaço, sem parágrafo, sem igual
+                        texto_comespaco = texto_testef.upper().replace('\n', "").replace("=", ":")##Maiusc, sem parágrafo, sem igual COM ESPAÇO
+                        for f in possibilidades:
+                            if texto_semespaco.find(f) >= 0 or texto_comespaco.find(f) >= 0:
+                                texto_sem_espaco = texto_semespaco
+                                texto_com_espaco = texto_comespaco
+                                texto_modelo = texto_com_espaco
+                                print("FORMULÁRIO ENCONTRADO >>")
+                                # print(texto_sem_espaco)
+                                nomearq = i
+                                pass
+                            else:
+                                print("-")
+            except:
+                print("Protocolo ", protocolo, " - Nenhum formulário encontrado!")
+        else:
+            print(protocolo, " - Arquivo não é PDF!")
+    print("*************FORMULÁRIO OK")
+    #Verificando formulário incompatível
+    chave2 = "F"
+    try:
+        for g in possibilidadeserradas:
+            if texto_sem_espaco.find(g) >= 0 or texto_com_espaco.find(g) >= 0:
+                print("Protocolo ", protocolo, " - Formulário incompatível com a solicitação")
+                wb = load_workbook('OUTPUT.xlsx')
+                time.sleep(2)
+                ws = wb.active
+                to_append = ["1.ERRO", protocolo, "FORMULÁRIO NÃO É COMPATÍVEL COM A SOLICITAÇÃO LIGAÇÃO NOVA - ", g]
+                ws.append(to_append)
+                wb.save('OUTPUT.xlsx')
+                navegador.switch_to.default_content()
+                navegador.get("http://saw-coelba/atendimento/Pages/fale-conosco-view.aspx")
+                chave2 = "V"
+    except:
+        pass
+    print("*************PDF OK")
+    if chave2 == "V":
+        continue
+    else:
+        pass
+    print("*************CHAVE2 OK")
+    time.sleep(2)
+    ## PERGUNTAS E RESPOSTAS --------------------------------------------------
+    try:
+        if len(texto_com_espaco) >=10 and len(texto_sem_espaco) >=10:
+            print("Dentro do doc")
+            #PG 0 --- NOME COMPLETO------------------------------------------------
+            nome_completo = "EM BRANCO"
+            nomelist = ["N\\s*O\\s*M\\s*E\\s*C\\s*O\\s*M\\s*P\\s*L\\s*E\\s*T\\s*O\\s*:(.*?)R\\s*G\\s*:",
+                        "N\\s*O\\s*M\\s*E\\s*C\\s*O\\s*M\\s*P\\s*L\\s*E\\s*T\\s*O\\s*:(.*?)C\\s*N\\s*H\\s*:"]
+            if nome_html == "---------" or nome_html == "NOME NÃO ENCONTRADO (FIM)":
+                for i in nomelist:
+                    try:
+                        s = texto_com_espaco
+                        nome_completo = re.search(i, s)
+                        nome_completo = nome_completo.group(1).strip().rstrip()
+                        break
+                    except:
+                        nome_completo = "NÃO ENCONTRADA"
+            else:
+                nome_completo = nome_html
+            try:
+                if nome_completo == "NÃO ENCONTRADA":
+                    nome_completo = nome_html
+                elif len(nome_completo) <1:
+                    nome_completo = "EM BRANCO"
+            except:
+                pass
+
+            #PG 1 --- EXISTE REDE A MENOS DE 40M DO LOCAL? ------------------------
+            rede = "NÃO ENCONTRADA"
+            redelist = ["4\\s*0\\s*M\\s*D\\s*O\\s*L\\s*O\\s*C\\s*A\\s*L:(.*?)P\\s*A\\s*D\\s*R\\s*Ã\\s*O\\s*P\\s*R\\s*O\\s*N\\s*T\\s*O:",
+                        "3\\s*0\\s*M\\s*D\\s*O\\s*L\\s*O\\s*C\\s*A\\s*L:(.*?)P\\s*A\\s*D\\s*R\\s*Ã\\s*O\\s*P\\s*R\\s*O\\s*N\\s*T\\s*O:"]
+            for i in redelist:
+                try:
+                    s = texto_sem_espaco
+                    rede = re.search(i, s)
+                    rede = rede.group(1)
+                    if rede.find("X") == -1:
+                        rede = "EM BRANCO"
+                    elif rede.find("X") == 1:
+                        rede = "Sim"
+                    elif rede.find("X") >4:
+                        rede = "Não"
+                    break
+                except:
+                    rede = "NÃO ENCONTRADA"
+
+            #PG 2 --- PESSOA FÍSICA OU JURÍDICA? ----------------------------------
+            pessoa_fis_jur = "NÃO ENCONTRADA"
+            pessoa_fis_jurlist = ["N\\s*Ã\\s*O\\s*P\\s*E\\s*S\\s*S\\s*O\\s*A\\s*:(.*?)\\s*O\\s*B\\s*S\\s*:\\s*P\\s*E\\s*S\\s*S\\s*O\\s*A\\s*F\\s*Í\\s*S\\s*I\\s*C\\s*A\\s*I\\s*N\\s*F\\s*O\\s*R"
+                                  ,"N\\s*Ã\\s*O\\s*P\\s*E\\s*S\\s*S\\s*O\\s*A\\s*:(.*?)\\s*N\\s*O\\s*M\\s*E\\s*C\\s*O\\s*M\\s*P\\s*L\\s*E\\s*T\\s*O"]
+            for i in pessoa_fis_jurlist:
+                try:
+                    s = texto_sem_espaco
+                    pessoa_fis_jur = re.search(i, s)
+                    pessoa_fis_jur = pessoa_fis_jur.group(1)
+                    if pessoa_fis_jur.find("X") == -1:
+                        pessoa_fis_jur = "EM BRANCO"
+                    elif pessoa_fis_jur.find("X") == 1:
+                        pessoa_fis_jur = "Física"
+                    elif pessoa_fis_jur.find("X") >4:
+                        pessoa_fis_jur = "Jurídica"
+                    break
+                except:
+                    pessoa_fis_jur = "NÃO ENCONTRADA"
+
+            #PG 3 --- RG ----------------------------------------------------------
+            rg_form = "NÃO ENCONTRADA"
+            rglist = ["\\s*R\\s*G\\s*:\\s*(.*?)\\s*D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*E\\s*M\\s*I\\s*S\\s*S",
+                      "\\s*R\\s*G\\s*:\\s*(.*?)\\s*C\\s*P\\s*F\\s*:\\s*",
+                      "\\s*R\\s*G\\s*;\\s*(.*?)\\s*C\\s*P\\s*F\\s*:\\s*", "\\s*R\\s*G\\s*;\\s*(.*?)D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*E\\s*M\\s*I\\s*S\\s*S"]
+            for i in rglist:
+                try:
+                    s = texto_sem_espaco
+                    rg_form = re.search(i, s)
+                    rg_form = rg_form.group(1).strip().rstrip()
+                    rg_form = re.sub('[^0-9]+', '', rg_form)
+                    break
+                except:
+                    rg_form = "NÃO ENCONTRADA"
+            try:
+                if len(rg_form) <1:
+                    rg_form = "EM BRANCO"
+                elif len(rg_form) >=11:
+                    rg_form = "NÃO ENCONTRADA"
+            except:
+                pass
+
+            #PG 3.1 --- CPF -------------------------------------------------------
+            cpf_valido = "NÃO ENCONTRADA"
+            cpff = "NÃO ENCONTRADA"
+            cpflist = ["C\\s*P\\s*F\\s*:\\s*(.*?)D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*N\\s*A\\s*S\\s*C\\s*I\\s*M\\s*E\\s*N\\s*",
+                       "C\\s*P\\s*F\\s*:\\s*(.*?)P\\s*A\\s*R\\s*C\\s*E\\s*I\\s*R\\s*O\\s*:", "C\\s*P\\s*F\\s*.\\s*:\\s*.\\s*-(.*?)D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*N\\s*A\\s*S\\s*C\\s*I\\s*M\\s*E\\s*N\\s*T\\s*O\\s*:"] #RG;CPF:
+            for i in cpflist:
+                try:
+                    s = texto_sem_espaco
+                    cpff = re.search(i, s)
+                    cpff = cpff.group(1).strip().rstrip()
+                    cpff = re.sub('[^0-9]+', '', cpff)
+                    print(cpff)
+                    cpf = CPF()
+                    # cpf_valido = print(cpf.validate(cpff))
+                    fatia_um = cpff[:3]
+                    fatia_dois = cpff[3:6]
+                    fatia_tres = cpff[6:9]
+                    fatia_quatro = cpff[9:]
+                    cpf_valido = "{}{}{}{}".format(fatia_um, fatia_dois, fatia_tres, fatia_quatro)
+                    print(cpf_valido)
+                    if len(cpff)>19:
+                        s = texto_sem_espaco
+                        cpf_valido = re.search("C\\s*P\\s*F\\s*:\\s*(.*?)P\\s*A\\s*R\\s*C\\s*E\\s*I\\s*R\\s*O\\s*:", s)
+                        cpf_valido = cpff.group(1).strip()
+                        print(cpf_valido)
+                        break
+                    else:
+                        break
+                except:
+                    cpf_valido = "NÃO ENCONTRADA"
+                    cpff = "NÃO ENCONTRADA"
+                    print("PG 3.1 NÃO ENCONTRADA")
+            try:
+                cpf_valido1 = cpf.validate(cpff)
+                if str(cpf_valido1) == "True":
+                    pass
+                else:
+                    cpff = "CPF INVÁLIDO"
+                    cpf_valido ="CPF INVÁLIDO"
+            except:
+                pass
+
+            #PG 4 --- DATA DE EMISSÃO ---------------------------------------------
+            emiss = "EM BRANCO"
+            emisslist = ["D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O:(.*?)U\\s*F\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O:",
+                         "D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O(.*?)U\\s*F\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O"]
+            for i in emisslist:
+                try:
+                    s = texto_sem_espaco
+                    emiss = re.search(i, s)
+                    emiss = emiss.group(1).strip().rstrip()
+                    emiss = re.sub('[^0-9]+', '', emiss)
+                    if len(emiss) <= 8:
+                        fatia_um1 = emiss[:2]
+                        fatia_dois1 = emiss[2:4]
+                        fatia_tres1 = emiss[4:8]
+                        emiss = "{}/{}/{}".format(fatia_um1, fatia_dois1, fatia_tres1)
+                        break
+                    else:
+                        emiss = "FORA DO PADRÃO"
+                        break
+                except:
+                    emiss = "NÃO ENCONTRADA"
+            try:
+                if len(emiss) <4:
+                    emiss = "EM BRANCO"
+            except:
+                pass
+
+            #PG 5 --- UF EMISSÃO: -------------------------------------------------
+            uf_emissao = "EM BRANCO"
+            uf_emissaolist = ["D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O:(.*?)U\\s*F\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O:"]
+            for i in uf_emissaolist:
+                try:
+                    s = texto_sem_espaco
+                    uf_emissao = re.search("U\\s*F\\s*E\\s*M\\s*I\\s*S\\s*S\\s*Ã\\s*O:(.*?)O\\s*R\\s*G\\s*Ã\\s*O\\s*E\\s*X\\s*P\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R", s)
+                    uf_emissao = uf_emissao.group(1).strip().rstrip()
+                    break
+                except:
+                    uf_emissao = "NÃO ENCONTRADA"
+            try:
+                if uf_emissao == "NÃO ENCONTRADA":
+                    uf_emissao = estado_html
+                elif len(uf_emissao) <1:
+                    uf_emissao = "EM BRANCO"
+            except:
+                pass
+
+            #PG 6 --- ÓRGÃO EXPEDIDOR: --------------------------------------------
+            orgao_expedidor = "EM BRANCO"
+            orgao_expedidorlist = ["O\\s*E\\s*X\\s*P\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*:\\s*(.*?)C\\s*P\\s*F\\s*:\\s*", "O\\s*E\\s*X\\s*P\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*:(.*?)R\\s*G\\s*:\\s*", "O\\s*R\\s*G\\s*.\\s*Ã\\s*O\\s*\\s*.\\s*E\\s*X\\s*P\\s*-\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*:\\s*(.*?)C\\s*P\\s*F\\s*:\\s*"]
+            for i in orgao_expedidorlist:
+                try:
+                    s = texto_sem_espaco
+                    orgao_expedidor = re.search(i, s)
+                    orgao_expedidor = orgao_expedidor.group(1).strip().rstrip()
+                    break
+                except:
+                    orgao_expedidor = "NÃO ENCONTRADA"
+            try:
+                if len(orgao_expedidor) <1:
+                    orgao_expedidor = "EM BRANCO"
+                elif orgao_expedidor.find("SSP") != -1:
+                    orgao_expedidor = "SSP"
+            except:
+                pass
+
+            #PG 7 --- DATA NASC: --------------------------------------------------
+            data_de_nascimento = "EM BRANCO"
+            data_de_nascimentolist = ["D\\s*A\\s*T\\s*A\\s*D\\s*E\\s*N\\s*A\\s*S\\s*C\\s*I\\s*M\\s*E\\s*N\\s*T\\s*O:(.*?)L\\s*O\\s*C\\s*A\\s*L\\s*D\\s*E\\s*N\\s*A\\s*S\\s*C\\s*I\\s*M"]
+            for i in data_de_nascimentolist:
+                try:
+                    s = texto_sem_espaco
+                    data_de_nascimento = re.search(i, s)
+                    data_de_nascimento = data_de_nascimento.group(1).strip().replace("-", "/")#< Padronizando somente data com barra
+                    data_de_nascimento = re.sub('[^0-9]+', '', data_de_nascimento)
+                    if len(data_de_nascimento) <= 8:
+                        fatia_um1 = data_de_nascimento[:2]
+                        fatia_dois1 = data_de_nascimento[2:4]
+                        fatia_tres1 = data_de_nascimento[4:8]
+                        data_de_nascimento = "{}/{}/{}".format(fatia_um1, fatia_dois1, fatia_tres1)
+                        break
+                    else:
+                        data_de_nascimento = "NÃO ENCONTRADA"
+                        break
+                except:
+                    data_de_nascimento = "NÃO ENCONTRADA"
+            try:
+                if len(data_de_nascimento) <4:
+                    data_de_nascimento = "EM BRANCO"
+            except:
+                pass
+
+            #PG 8 --- LOCAL DE NASC: ----------------------------------------------
+            local_de_nascimento = "EM BRANCO"
+            local_de_nascimentolist = ["L\\s*O\\s*C\\s*A\\s*L\\s*D\\s*E\\s*N\\s*A\\s*S\\s*C\\s*I\\s*M\\s*E\\s*N\\s*T\\s*O\\s*:\\s*(.*?)\\s*N\\s*A\\s*C\\s*I\\s*O\\s*N\\s*A\\s*L\\s*I\\s*D\\s*A\\s*D\\s*E"]
+            for i in local_de_nascimentolist:
+                try:
+                    s = texto_com_espaco
+                    local_de_nascimento = re.search(i, s)
+                    local_de_nascimento = local_de_nascimento.group(1).strip()
+                    break
+                except:
+                    local_de_nascimento = "NÃO ENCONTRADA"
+            try:
+                if len(local_de_nascimento) <1:
+                    local_de_nascimento = "EM BRANCO"
+            except:
+                pass
+
+            #PG 9 --- NACIONALIDADE: ----------------------------------------------
+            nacionalidade = "EM BRANCO"
+            nacionalidadelist = ["N\\s*A\\s*C\\s*I\\s*O\\s*N\\s*A\\s*L\\s*I\\s*D\\s*A\\s*D\\s*E\\s*:(.*?)E\\s*S\\s*T\\s*A\\s*D\\s*O\\s*C\\s*I\\s*V\\s*I\\s*L:"]
+            nacionalidadevar = ["BRASIELIRO","BRASILEIRA", "BRASILEIRO", "BRASLEIRO", "BRASIL", "BRASILEIRO(A)", "BRASILEIR0", "BRASLEIRA", "BR", "BA", "BRASIELEIRA", "BRASILERO", "BRASILERA", "BAHIA"]
+            for i in nacionalidadelist:
+                try:
+                    s = texto_sem_espaco
+                    nacionalidade = re.search(i, s)
+                    nacionalidade = nacionalidade.group(1).strip()
+                    break
+                except:
+                    nacionalidade = "NÃO ENCONTRADA"
+            try:
+                if len(nacionalidade) <1:
+                    nacionalidade = "EM BRANCO"
+            except:
+                pass
+            try:
+                if nacionalidade in nacionalidadevar:
+                    nacionalidade = "BRASILEIRO(A)"
+            except:
+                pass
+
+            #PG 10 --- ESTADO CIVIL: -----------------------------------------------
+            estado_civilf = "NÃO ENCONTRADA"
+            estado_civillist = ["E\\s*S\\s*T\\s*A\\s*D\\s*O\\s*C\\s*I\\s*V\\s*I\\s*L\\s*:(.*?)S\\s*E\\s*X\\s*O\\s*:"]
+            for i in estado_civillist:
+                try:
+                    s = texto_sem_espaco
+                    estado_civil = re.search(i, s)
+                    estado_civil = estado_civil.group(1)
+                    if estado_civil.find("X") == -1:
+                        estado_civilf = "EM BRANCO"
+                    elif estado_civil.find("X") == 1:
+                        estado_civilf = "Solteiro"
+                    elif estado_civil.find("X") == 11:
+                        estado_civilf = "Casado"
+                    elif estado_civil.find("X") == 19:
+                        estado_civilf = "Viúvo"
+                    elif estado_civil.find("X") == 26:
+                        estado_civilf = "Divorciado"
+                    break
+                except:
+                    estado_civilf = "NÃO ENCONTRADA"
+
+            #PG 11 --- SEXO: --------------------------------------------------
+            sexo = "NÃO ENCONTRADA"
+            sexolist = ["S\\s*E\\s*X\\s*O\\s*:(.*?)E\\s*M\\s*C\\s*A\\s*S\\s*O\\s*D\\s*E\\s*R\\s*E\\s*A\\s*T\\s*I\\s*V\\s*A", "S\\s*E\\s*X\\s*O\\s*:(.*?)N\\s*O\\s*M\\s*E\\s*D\\s*A\\s*E\\s*M\\s*P\\s*R\\s*E\\s*S\\s*A\\s*:A\\s*"]
+            for i in sexolist:
+                try:
+                    s = texto_sem_espaco
+                    sexo = re.search(i, s)
+                    sexo = sexo.group(1)
+                    if sexo.find("X") == -1:
+                        sexo = "EM BRANCO"
+                    elif sexo.find("X") == 1:
+                        sexo = "Masculino"
+                    elif sexo.find("X") == 0:
+                        sexo = "Masculino"
+                    elif sexo.find("X") == 12:
+                        sexo = "Feminino"
+                    elif sexo.find("X") > 13:
+                        sexo = "EM BRANCO"
+                    break
+                except:
+                    sexo = "NÃO ENCONTRADA"
+
+            #PG 12 --- NOME DA EMPRESA: ----------------------------------------------
+            nome_da_empresa = "EM BRANCO"
+            nome_da_empresalist = ["N\\s*O\\s*M\\s*E\\s*D\\s*A\\s*E\\s*M\\s*P\\s*R\\s*E\\s*S\\s*A\\s*:(.*?)C\\s*N\\s*P\\s*J\\s*:"]
+            for i in nome_da_empresalist:
+                try:
+                    s = texto_com_espaco
+                    nome_da_empresa = re.search(i, s)
+                    nome_da_empresa = nome_da_empresa.group(1).strip()
+                    break
+                except:
+                    nome_da_empresa = "NÃO ENCONTRADA"
+            try:
+                if len(nome_da_empresa) <1:
+                    nome_da_empresa = "EM BRANCO"
+            except:
+                pass
+
+            #PG 13 --- CNPJ: ----------------------------------------------
+            cnpj = "EM BRANCO"
+            cnpjlist = ["C\\s*N\\s*P\\s*J\\s*:(.*?)I\\s*N\\s*S\\s*C\\s*R\\s*I\\s*Ç\\s*Ã\\s*O\\s*M\\s*U\\s*N\\s*I\\s*C\\s*I\\s*P\\s*A\\s*L\\s*/\\s*E\\s*S\\s*T\\s*A\\s*D\\s*U\\s*A\\s*L\\s*:"]
+            for i in cnpjlist:
+                try:
+                    s = texto_sem_espaco
+                    cnpj = re.search(i, s)
+                    cnpj = cnpj.group(1).strip()
+                    cnpj = re.sub('[^0-9]+', '', cnpj)
+                    break
+                except:
+                    cnpj = "NÃO ENCONTRADA"
+            try:
+                if len(cnpj) <1:
+                    cnpj = "EM BRANCO"
+            except:
+                pass
+
+            #PG 14 --- INSCRIÇÃOMUNICIPAL/ESTADUAL:--------------------------------
+            incricao_mun_est = "EM BRANCO"
+            incricao_mun_estlist = ["I\\s*N\\s*S\\s*C\\s*R\\s*I\\s*Ç\\s*Ã\\s*O\\s*M\\s*U\\s*N\\s*I\\s*C\\s*I\\s*P\\s*A\\s*L\\s*/\\s*E\\s*S\\s*T\\s*A\\s*D\\s*U\\s*A\\s*L\\s*:(.*?)C\\s*O\\s*N\\s*T\\s*R\\s*I\\s*B\\s*U\\s*I\\s*N\\s*T\\s*E\\s*S\\s*I\\s*M\\s*P\\s*L\\s*E\\s*S\\s*:"]
+            for i in incricao_mun_estlist:
+                try:
+                    s = texto_sem_espaco
+                    incricao_mun_est = re.search(i, s)
+                    incricao_mun_est = incricao_mun_est.group(1).strip()
+                    incricao_mun_est = re.sub('[^0-9]+', '', incricao_mun_est)
+                    break
+                except:
+                    incricao_mun_est = "NÃO ENCONTRADA"
+            try:
+                if len(incricao_mun_est) <1:
+                    incricao_mun_est = "EM BRANCO"
+            except:
+                pass
+                    
+            #PG 15 --- CONTRIBUINTE SIMPLES----------------------------------------
+            contribuinte_simples = "EM BRANCO"
+            contribuinte_simpleslist = ["C\\s*O\\s*N\\s*T\\s*R\\s*I\\s*B\\s*U\\s*I\\s*N\\s*T\\s*E\\s*S\\s*I\\s*M\\s*P\\s*L\\s*E\\s*S\\s*:(.*?)E\\s*M\\s*C\\s*A\\s*S\\s*O\\s*D\\s*E\\s*R\\s*E\\s*A\\s*T\\s*I\\s*V\\s*A\\s*Ç\\s*Ã\\s*O\\s*I\\s*N\\s*F\\s*O\\s*R\\s*M\\s*E\\s*A\\s*C\\s*O\\s*N\\s*T\\s*A\\s*C\\s*O\\s*N\\s*T\\s*R\\s*A\\s*T\\s*O\\s*A\\s*N\\s*T\\s*E\\s*R\\s*I\\s*O\\s*R"]
+            for i in contribuinte_simpleslist:
+                try:
+                    s = texto_sem_espaco
+                    contribuinte_simples = re.search(i, s)
+                    contribuinte_simples = contribuinte_simples.group(1).strip()
+                    if contribuinte_simples.find("X") == -1:
+                        contribuinte_simples = "EM BRANCO"
+                    elif contribuinte_simples.find("X") == 1:
+                        contribuinte_simples = "Sim"
+                    elif contribuinte_simples.find("X") == 6:
+                        contribuinte_simples = "Não"
+                    elif contribuinte_simples.find("X") > 7:
+                        contribuinte_simples = "EM BRANCO"
+                    break
+                except:
+                    contribuinte_simples = "NÃO ENCONTRADA"
+            try:
+                if len(contribuinte_simples) <1:
+                    contribuinte_simples = "EM BRANCO"
+            except:
+                pass
+
+            #PG 16 --- CONTRATO REATIVAÇÃO ANTERIOR--------------------------------
+            contrato_reat_anterior = "EM BRANCO"
+            contrato_reat_anteriorlist = ["E\\s*M\\s*C\\s*A\\s*S\\s*O\\s*D\\s*E\\s*R\\s*E\\s*A\\s*T\\s*I\\s*V\\s*A\\s*Ç\\s*Ã\\s*O\\s*I\\s*N\\s*F\\s*O\\s*R\\s*M\\s*E\\s*A\\s*C\\s*O\\s*N\\s*T\\s*A\\s*C\\s*O\\s*N\\s*T\\s*R\\s*A\\s*T\\s*O\\s*A\\s*N\\s*T\\s*E\\s*R\\s*I\\s*O\\s*R\\s*:(.*?)E\\s*N\\s*D\\s*E\\s*R\\s*E\\s*Ç\\s*O\\s*:"]
+            for i in contrato_reat_anteriorlist:
+                try:
+                    s = texto_sem_espaco
+                    contrato_reat_anterior = re.search(i, s)
+                    contrato_reat_anterior = contrato_reat_anterior.group(1).strip()
+                    contrato_reat_anterior = re.sub('[^0-9]+', '', contrato_reat_anterior)
+                    break
+                except:
+                    contrato_reat_anterior = "NÃO ENCONTRADA"
+            try:
+                if len(contrato_reat_anterior) <1:
+                    contrato_reat_anterior = "EM BRANCO"
+            except:
+                pass
+
+            #PG 17 --- ENDEREÇO ---------------------------------------------------
+            enderecolist = ["E\\s*N\\s*D\\s*E\\s*R\\s*E\\s*Ç\\s*O\\s*:(.*?)N\\s*º\\s*:"]
+            if endereco_html == "ENDEREÇO NÃO ENCONTRADO (FIM)" or endereco_html == "---------" or endereco_html == '<span class="required"></span>':
+                for i in enderecolist:
+                    try:
+                        s = texto_com_espaco
+                        endereco = re.search(i, s)
+                        endereco1 = endereco.group(1).strip().replace("  ", " ")
+                        break
+                    except:
+                        endereco = "NÃO ENCONTRADA"
+            else:
+                endereco = endereco_html
+
+
+            #PG 18 --- NÚMERO ---------------------------------------------------
+            numero = "EM BRANCO"
+            numerolist = ["N\\s*º\\s*:(.*?)C\\s*O\\s*M\\s*P\\s*L\\s*E\\s*M\\s*E\\s*N\\s*T\\s*O\\s*:"]
+            for i in numerolist:
+                try:
+                    s = texto_sem_espaco
+                    numero = re.search(i, s)
+                    numero = numero.group(1).strip()
+                    break
+                except:
+                    numero = "NÃO ENCONTRADA"
+            try:
+                if len(numero) <1:
+                    numero = "EM BRANCO"
+                elif len(str(numero)) >7:
+                    numero = str(numero[:7])
+            except:
+                pass
+
+            #PG 19 --- COMPLEMENTO ---------------------------------------------------
+            complemento = "EM BRANCO"
+            complementolist = ["C\\s*O\\s*M\\s*P\\s*L\\s*E\\s*M\\s*E\\s*N\\s*T\\s*O\\s*:(.*?)B\\s*A\\s*I\\s*R\\s*R\\s*O\\s*:"]
+            for i in complementolist:
+                try:
+                    s = texto_com_espaco
+                    complemento = re.search(i, s)
+                    complemento = complemento.group(1).strip()
+                    break
+                except:
+                    complemento = "NÃO ENCONTRADA"
+            try:
+                if len(complemento) <1:
+                    complemento = "EM BRANCO"
+            except:
+                pass
+
+            #PG 20 --- BAIRRO ---------------------------------------------------
+            bairro = "EM BRANCO"
+            bairrolist = ["B\\s*A\\s*I\\s*R\\s*R\\s*O\\s*:(.*?)C\\s*E\\s*P\\s*:"]
+            if bairro_html == "---------" or bairro_html == "BAIRRO NÃO ENCONTRADO (FIM)":
+                for i in bairrolist:
+                    try:
+                        s = texto_com_espaco
+                        bairro = re.search(i, s)
+                        bairro = bairro.group(1).strip().replace("  ", " ")
+                        break
+                    except:
+                        bairro = "NÃO ENCONTRADA"
+            else:
+                bairro = bairro_html
+            try:
+                if bairro == "NÃO ENCONTRADA":
+                    bairro = bairro_html
+            except:
+                pass
+
+            #PG 21 --- CEP ---------------------------------------------------
+            cep = "EM BRANCO"
+            ceplist = ["C\\s*E\\s*P\\s*:(.*?)M\\s*U\\s*N\\s*I\\s*C\\s*Í\\s*P\\s*I\\s*O\\s*:"]
+            if cep_html == "---------" or cep_html == "CEP NÃO ENCONTRADO (FIM)":
+                for i in ceplist:
+                    try:
+                        s = texto_sem_espaco
+                        cep = re.search(i, s)
+                        cep = cep.group(1).strip().replace("  ", "").replace(" ", "")
+                        break
+                    except:
+                        cep = "NÃO ENCONTRADA"
+            else:
+                cep = cep_html
+            try:
+                if cep == "NÃO ENCONTRADA":
+                    cep = cep_html
+            except:
+                pass
+
+            #PG 22 --- MUNICÍPIO --------------------------------------------------
+            municipio = "EM BRANCO"
+            municipiolist = ["M\\s*U\\s*N\\s*I\\s*C\\s*Í\\s*P\\s*I\\s*O\\s*:(.*?)M\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*V\\s*I\\s*Z\\s*I\\s*N\\s*H\\s*O\\s*:"]
+            for i in municipiolist:
+                try:
+                    s = texto_com_espaco
+                    municipio = re.search(i, s)
+                    municipio = municipio.group(1).strip().replace("  ", " ").rstrip()
+                    break
+                except:
+                    municipio = "NÃO ENCONTRADA"
+            try:
+                if len(municipio) <1:
+                    municipio = "EM BRANCO"
+            except:
+                pass
+
+
+            #PG 23 --- MEDIDOR VIZINHO --------------------------------------------
+            medidor_vizinho = "EM BRANCO"
+            medidor_vizinholist = ["M\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*V\\s*I\\s*Z\\s*I\\s*N\\s*H\\s*O\\s*:(.*?)T\\s*I\\s*P\\s*O\\s*D\\s*E\\s*L\\s*I\\s*G\\s*A\\s*Ç\\s*Ã\\s*O\\s*:"]
+            for i in medidor_vizinholist:
+                try:
+                    s = texto_sem_espaco
+                    medidor_vizinho = re.search(i, s)
+                    medidor_vizinho = medidor_vizinho.group(1).strip().replace("  ", " ")
+                    medidor_vizinho = re.sub('[^0-9]+', '', medidor_vizinho)
+                    break
+                except:
+                    medidor_vizinho = "NÃO ENCONTRADA"
+            try:
+                if len(medidor_vizinho) <1:
+                    medidor_vizinho = "EM BRANCO"
+                elif len(str(medidor_vizinho)) >10:
+                    medidor_vizinho = str(medidor_vizinho[:10])
+            except:
+                pass
+
+            #PG 24 --- TIPO LIGAÇÃO------------------------------------------------
+            tipo_ligacao = "EM BRANCO"
+            tipo_ligacaolist = ["T\\s*I\\s*P\\s*O\\s*D\\s*E\\s*L\\s*I\\s*G\\s*A\\s*Ç\\s*Ã\\s*O\\s*:(.*?)C\\s*A\\s*R\\s*G\\s*A\\s*T\\s*O\\s*T\\s*A\\s*L\\s*:"]
+            for i in tipo_ligacaolist:
+                try:
+                    s = texto_sem_espaco
+                    tipo_ligacao = re.search(i, s)
+                    tipo_ligacao = tipo_ligacao.group(1).strip()
+                    if tipo_ligacao.find("X") == -1:
+                        tipo_ligacao = "EM BRANCO"
+                    elif tipo_ligacao.find("X") == 1 or tipo_ligacao.find("X") == 0:
+                        tipo_ligacao = "Monofásico"
+                    elif tipo_ligacao.find("X)B") == 13 or tipo_ligacao.find("X)B") ==24:
+                        tipo_ligacao = "Bifásico"
+                    elif tipo_ligacao.find("X)T") == 23 or tipo_ligacao.find("X)T") == 13:
+                        tipo_ligacao = "Trifásico"
+                    elif tipo_ligacao.find("X") > 25:
+                        tipo_ligacao = "EM BRANCO"
+                    break
+                except:
+                    tipo_ligacao = "NÃO ENCONTRADA"
+    
+            #PG 25 --- CARGA TOTAL ------------------------------------------------
+            carga_total = "EM BRANCO"
+            carga_totallist = ["C\\s*A\\s*R\\s*G\\s*A\\s*T\\s*O\\s*T\\s*A\\s*L\\s*:(.*?)T\\s*I\\s*P\\s*O\\s*D\\s*O\\s*I\\s*M\\s*Ó\\s*V\\s*E\\s*L\\s*:"]
+            for i in carga_totallist:
+                try:
+                    s = texto_sem_espaco
+                    carga_total = re.search(i, s)
+                    carga_total = carga_total.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    carga_total = "NÃO ENCONTRADA"
+            try:
+                if len(carga_total) <1:
+                    carga_total = "EM BRANCO"
+            except:
+                pass
+
+            #PG 26 --- TIPO DO IMÓVEL------------------------------------------------
+            tipo_do_imovel = "EM BRANCO"
+            tipo_do_imovellist = ["T\\s*I\\s*P\\s*O\\s*D\\s*O\\s*I\\s*M\\s*Ó\\s*V\\s*E\\s*L\\s*:(.*?)A\\s*T\\s*I\\s*V\\s*I\\s*D\\s*A\\s*D\\s*E\\s*P\\s*R\\s*I\\s*N\\s*C\\s*I\\s*P\\s*A\\s*L\\s*:"]
+            for i in tipo_do_imovellist:
+                try:
+                    s = texto_sem_espaco
+                    tipo_do_imovel = re.search(i, s)
+                    tipo_do_imovel = tipo_do_imovel.group(1).strip().replace("*", "X")
+                    if tipo_do_imovel.find("X") == -1:
+                        tipo_do_imovel = "EM BRANCO"
+                    elif tipo_do_imovel.find("X") == 1:
+                        tipo_do_imovel = "Residencial"
+                    elif tipo_do_imovel.find("X)C") == 14 or tipo_do_imovel.find("X)C") == 21:
+                        tipo_do_imovel = "Comercial"
+                    elif tipo_do_imovel.find("X)R") == 25 or tipo_do_imovel.find("X)R") == 14:
+                        tipo_do_imovel = "Rural"
+                    break
+                except:
+                    tipo_do_imovel = "NÃO ENCONTRADA"
+    
+            #PG 27 --- ATIVIDADE PRINCIPAL ----------------------------------------
+            atv_principal = "EM BRANCO"
+            atv_principallist = ["A\\s*T\\s*I\\s*V\\s*I\\s*D\\s*A\\s*D\\s*E\\s*P\\s*R\\s*I\\s*N\\s*C\\s*I\\s*P\\s*A\\s*L\\s*:(.*?)T\\s*I\\s*P\\s*O\\s*D\\s*E\\s*A\\s*T\\s*I\\s*V\\s*I\\s*D\\s*A\\s*D\\s*E\\s*P\\s*R\\s*I\\s*N\\s*C\\s*I\\s*P\\s*A\\s*L\\s*:"]
+            for i in atv_principallist:
+                try:
+                    s = texto_com_espaco
+                    atv_principal = re.search(i, s)
+                    atv_principal = atv_principal.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    atv_principal = "NÃO ENCONTRADA"
+            try:
+                if len(atv_principal) <1:
+                    atv_principal = "EM BRANCO"
+            except:
+                pass
+
+            #PG 28 --- TIPO DE ATIVIDADE PRINCIPAL ----------------------------------------
+            tipo_de_atv_principal = "EM BRANCO"
+            tipo_de_atv_principallist = ["T\\s*I\\s*P\\s*O\\s*D\\s*E\\s*A\\s*T\\s*I\\s*V\\s*I\\s*D\\s*A\\s*D\\s*E\\s*P\\s*R\\s*I\\s*N\\s*C\\s*I\\s*P\\s*A\\s*L\\s*:(.*?)P\\s*O\\s*N\\s*T\\s*O\\s*D\\s*E\\s*R\\s*E\\s*F\\s*E\\s*R\\s*Ê\\s*N\\s*C\\s*I\\s*A\\s*:"]
+            for i in tipo_de_atv_principallist:
+                try:
+                    s = texto_com_espaco
+                    tipo_de_atv_principal = re.search(i, s)
+                    tipo_de_atv_principal = tipo_de_atv_principal.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    tipo_de_atv_principal = "NÃO ENCONTRADA"
+            try:
+                if len(tipo_de_atv_principal) <1:
+                    tipo_de_atv_principal = "EM BRANCO"
+            except:
+                pass
+
+            #PG 29 --- PONTO DE REFERÊNCIA ----------------------------------------
+            ponto_de_referencia = "EM BRANCO"
+            ponto_de_referencialist = ["P\\s*O\\s*N\\s*T\\s*O\\s*D\\s*E\\s*R\\s*E\\s*F\\s*E\\s*R\\s*Ê\\s*N\\s*C\\s*I\\s*A\\s*:(.*?)P\\s*R\\s*O\\s*C\\s*U\\s*R\\s*A\\s*R\\s*P\\s*O\\s*R\\s*:"]
+            for i in ponto_de_referencialist:
+                try:
+                    s = texto_com_espaco
+                    ponto_de_referencia = re.search(i, s)
+                    ponto_de_referencia = ponto_de_referencia.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    ponto_de_referencia = "NÃO ENCONTRADA"
+            try:
+                if len(ponto_de_referencia) <1:
+                    ponto_de_referencia = "EM BRANCO"
+            except:
+                pass
+    
+            #PG 30 --- PROCURAR POR -----------------------------------------------
+            procurar_por = "EM BRANCO"
+            procurar_porlist = ["P\\s*R\\s*O\\s*C\\s*U\\s*R\\s*A\\s*R\\s*P\\s*O\\s*R\\s*:(.*?)T\\s*E\\s*L\\s*E\\s*F\\s*O\\s*N\\s*E\\s*:"]
+            for i in procurar_porlist:
+                try:
+                    s = texto_com_espaco
+                    procurar_por = re.search(i, s)
+                    procurar_por = procurar_por.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    procurar_por = "NÃO ENCONTRADA"
+            try:
+                if len(procurar_por) <1:
+                    procurar_por = "EM BRANCO"
+            except:
+                pass
+    
+            #PG 31 --- TELEFONE ---------------------------------------------------
+            telefone = "EM BRANCO"
+            telefonelist = ["T\\s*E\\s*L\\s*E\\s*F\\s*O\\s*N\\s*E\\s*:(.*?)E\\s*-\\s*M\\s*A\\s*I\\s*L\\s*:"]
+            for i in telefonelist:
+                try:
+                    s = texto_com_espaco
+                    telefone = re.search(i, s)
+                    telefone = telefone.group(1).strip().replace("  ", " ")
+                    telefone = re.sub('[^0-9]+', '', telefone)
+                    break
+                except:
+                    telefone = "NÃO ENCONTRADA"
+            try:
+                if telefone == "NÃO ENCONTRADA":
+                    telefone = telefone_html
+            except:
+                pass
+
+            #PG 32 --- E-MAIL ---------------------------------------------------
+            email = "EM BRANCO"
+            emaillist = ["E\\s*-\\s*M\\s*A\\s*I\\s*L\\s*:(.*?)C\\s*L\\s*I\\s*E\\s*N\\s*T\\s*E\\s*D\\s*E\\s*S\\s*E\\s*J\\s*A\\s*F\\s*A\\s*T\\s*U\\s*R\\s*A\\s*P\\s*O\\s*R\\s*E\\s*-\\s*M\\s*A\\s*I\\s*L\\s*:"]
+            for i in emaillist:
+                try:
+                    s = texto_sem_espaco
+                    email = re.search(i, s)
+                    email = email.group(1).strip()
+                    break
+                except:
+                    email = "NÃO ENCONTRADA"
+            try:
+                is_valid = validate_email(email)
+                if len(email) <1:
+                    email = "EM BRANCO"
+                elif is_valid == True:
+                    pass
+                elif is_valid == False:
+                    email = "NÃO ENCONTRADA"
+            except:
+                pass
+
+            #PG 33 --- FATURA POR E-MAIL ---------------------------------------------------
+            fatura_por_email ="EM BRANCO"
+            fatura_por_emaillist = ["C\\s*L\\s*I\\s*E\\s*N\\s*T\\s*E\\s*D\\s*E\\s*S\\s*E\\s*J\\s*A\\s*F\\s*A\\s*T\\s*U\\s*R\\s*A\\s*P\\s*O\\s*R\\s*E\\s*-\\s*M\\s*A\\s*I\\s*L\\s*:(.*?)D\\s*A\\s*T\\s*A\\s*B\\s*O\\s*A\\s*:"]
+            for i in fatura_por_emaillist:
+                try:
+                    s = texto_sem_espaco
+                    fatura_por_email = re.search(i, s)
+                    fatura_por_email = fatura_por_email.group(1).strip().replace("  ", " ")
+                    if fatura_por_email.find("X") == -1:
+                        fatura_por_email = "Não"
+                    elif fatura_por_email.find("X") == 1:
+                        fatura_por_email = "Sim"
+                    elif fatura_por_email.find("X") >4:
+                        fatura_por_email = "Não"
+                    break
+                except:
+                    fatura_por_email ="NÃO ENCONTRADA"
+    
+            #PG 34 --- DATA BOA ---------------------------------------------------
+            data_boa = "EM BRANCO"
+            data_boalist = ["D\\s*A\\s*T\\s*A\\s*B\\s*O\\s*A\\s*:(.*?)C\\s*A\\s*D\\s*A\\s*S\\s*T\\s*R\\s*O\\s*D\\s*E\\s*T\\s*A\\s*R\\s*I\\s*F\\s*A\\s*S\\s*O\\s*C\\s*I\\s*A\\s*L\\s*:"]
+            for i in data_boalist:
+                try:
+                    s = texto_sem_espaco
+                    data_boa = re.search(i, s)
+                    data_boa = data_boa.group(1).strip().replace("  ", " ")
+                    if data_boa.find("X") == -1:
+                        data_boa = "Não"
+                    elif data_boa.find("X") == 1:
+                        data_boa = "Sim"
+                    elif data_boa.find("X") == 6:
+                        data_boa = "Não"
+                    elif data_boa.find("X") > 6:
+                        data_boa = "Não"
+                    break
+                except:
+                    data_boa = "NÃO ENCONTRADA"
+    
+            #PG 35 --- DATA BOA 2 ---------------------------------------------------
+            data_boadf = "EM BRANCO"
+            data_boadlist = ["D\\s*A\\s*T\\s*A\\s*B\\s*O\\s*A\\s*:(.*?)C\\s*A\\s*D\\s*A\\s*S\\s*T\\s*R\\s*O\\s*D\\s*E\\s*T\\s*A\\s*R\\s*I\\s*F\\s*A\\s*S\\s*O\\s*C\\s*I\\s*A\\s*L\\s*:"]
+            if data_boa == "Sim":
+                for i in data_boadlist:
+                    try:
+                        s = texto_sem_espaco
+                        data_boad = re.search(i, s)
+                        data_boad = data_boad.group(1).strip().replace("  ", " ").replace("()SIM", "").replace("(X)SIM", "").replace("()NÃO", "").replace("(X)NÃO", "")
+                        if data_boad.find("X") == -1:
+                            data_boadf = "EM BRANCO"
+                        elif data_boad.find("(X)01") > -1:
+                            data_boadf = "01"
+                        elif data_boad.find("(X)06") > -1:
+                            data_boadf = "06"
+                        elif data_boad.find("(X)11") > -1:
+                            data_boadf = "11"
+                        elif data_boad.find("(X)16") > -1:
+                            data_boadf = "16"
+                        elif data_boad.find("(X)21") > -1:
+                            data_boadf = "21"
+                        elif data_boad.find("(X)26") > -1:
+                            data_boadf = "26"
+                        break
+                    except:
+                        data_boadf = "NÃO ENCONTRADA"
+            else:
+                data_boadf = "EM BRANCO"
+
+
+            #PG 36 --- CADASTRO DE TARIFA SOCIAL ---------------------------------------------------
+            cadastro_tarifa_socialf = "EM BRANCO"
+            cadastro_tarifa_sociallist = ["C\\s*A\\s*D\\s*A\\s*S\\s*T\\s*R\\s*O\\s*D\\s*E\\s*T\\s*A\\s*R\\s*I\\s*F\\s*A\\s*S\\s*O\\s*C\\s*I\\s*A\\s*L\\s*:(.*?)N\\s*º\\s*D\\s*O\\s*N\\s*I\\s*S\\s*:"]
+            for i in cadastro_tarifa_sociallist:
+                try:
+                    s = texto_sem_espaco
+                    cadastro_tarifa_social = re.search(i, s)
+                    cadastro_tarifa_social = cadastro_tarifa_social.group(1).strip().replace("  ", " ")
+                    if cadastro_tarifa_social.find("X") >= 7:
+                        cadastro_tarifa_socialf = "EM BRANCO"
+                    elif cadastro_tarifa_social.find("X") == 1:
+                        cadastro_tarifa_socialf = "Sim"
+                    elif cadastro_tarifa_social.find("X") == 6:
+                        cadastro_tarifa_socialf = "Não"
+                    elif cadastro_tarifa_social.find("X") == -1:
+                        cadastro_tarifa_socialf = "EM BRANCO"
+                    break
+                except:
+                    cadastro_tarifa_socialf = "NÃO ENCONTRADA"
+    
+            #PG 37 --- NUMERO DO NIS ----------------------------------------------
+            numero_nis = "EM BRANCO"
+            numero_nislist = ["N\\s*º\\s*D\\s*O\\s*N\\s*I\\s*S\\s*:(.*?)A\\s*C\\s*A\\s*R\\s*G\\s*A\\s*D\\s*E\\s*C\\s*L\\s*A\\s*R\\s*A\\s*D\\s*A\\s*É\\s*I\\s*N\\s*F\\s*E\\s*R\\s*I\\s*O\\s*R\\s*A\\s*T\\s*E\\s*N\\s*S\\s*Ã\\s*O\\s*S\\s*O\\s*L\\s*I\\s*C\\s*I\\s*T\\s*A\\s*D\\s*A",
+                              "N\\s*º\\s*D\\s*O\\s*N\\s*I\\s*S\\s*:(.*?)P\\s*O\\s*S\\s*S\\s*U\\s*I\\s*B\\s*E\\s*N\\s*E\\s*F\\s*Í\\s*C\\s*I\\s*O\\s* \\s*R\\s*U\\s*R\\s*A\\s*L"]
+            for i in numero_nislist:
+                try:
+                    s = texto_sem_espaco
+                    numero_nis = re.search(i, s)
+                    numero_nis = numero_nis.group(1).strip().replace("  ", " ")
+                    numero_nis = re.sub('[^0-9]+', '', numero_nis)
+                    break
+                except:
+                    numero_nis = "NÃO ENCONTRADA"
+            try:
+                if len(numero_nis) <1:
+                    numero_nis = "EM BRANCO"
+                elif len(numero_nis) >11:
+                    numero_nis = str(numero_nis[:11])
+            except:
+                pass
+
+            #PG 38 --- CARGA DECLARADA É INFERIOR A TENSÃO ------------------------
+            carga_declaradaf = "EM BRANCO"
+            carga_declaradalist = ["A\\s*C\\s*A\\s*R\\s*G\\s*A\\s*D\\s*E\\s*C\\s*L\\s*A\\s*R\\s*A\\s*D\\s*A\\s*É\\s*I\\s*N\\s*F\\s*E\\s*R\\s*I\\s*O\\s*R\\s*A\\s*T\\s*E\\s*N\\s*S\\s*Ã\\s*O\\s*S\\s*O\\s*L\\s*I\\s*C\\s*I\\s*T\\s*A\\s*D\\s*A\\s*:(.*?)S\\s*E\\s*\\s*S\\s*I\\s*M\\s*,\\s*\\s*C\\s*L\\s*I\\s*E\\s*N\\s*T\\s*E\\s*\\s*E\\s*S\\s*T\\s*Á\\s*\\s*C\\s*I\\s*E\\s*N\\s*T\\s*E\\s*\\s*D\\s*A\\s*\\s*C\\s*O\\s*B\\s*R\\s*A\\s*N\\s*Ç\\s*A\\s*\\s*D\\s*O\\s*\\s*M\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*:"]
+            for i in carga_declaradalist:
+                try:
+                    s = texto_sem_espaco
+                    carga_declarada = re.search(i, s)
+                    carga_declarada = carga_declarada.group(1).strip().replace("  ", " ")
+                    if carga_declarada.find("X") >= 7:
+                        carga_declaradaf = "EM BRANCO"
+                    elif carga_declarada.find("X") == 1:
+                        carga_declaradaf = "Sim"
+                    elif carga_declarada.find("X") == 6:
+                        carga_declaradaf = "Não"
+                    elif carga_declarada.find("X") == -1:
+                        carga_declaradaf = "EM BRANCO"
+                    break
+                except:
+                    carga_declaradaf = "NÃO ENCONTRADA"
+    
+            #PG 39 --- CLIENTE CIENTE DO MEDIDOR ---------------------------------------------------
+            ciente_do_medidorf = "EM BRANCO"
+            ciente_do_medidorlist = ["C\\s*L\\s*I\\s*E\\s*N\\s*T\\s*E\\s*E\\s*S\\s*T\\s*Á\\s*C\\s*I\\s*E\\s*N\\s*T\\s*E\\s*D\\s*A\\s*C\\s*O\\s*B\\s*R\\s*A\\s*N\\s*Ç\\s*A\\s*D\\s*O\\s*M\\s*E\\s*D\\s*I\\s*D\\s*O\\s*R\\s*:(.*?)\\s*W\\s*A\\s*T\\s*T\\s*S\\s*"]
+            for i in ciente_do_medidorlist:
+                try:
+                    s = texto_sem_espaco
+                    ciente_do_medidor = re.search(i, s)
+                    ciente_do_medidor = ciente_do_medidor.group(1).strip().replace("  ", " ")
+                    if ciente_do_medidor.find("X") >= 7:
+                        ciente_do_medidorf = "EM BRANCO"
+                    elif ciente_do_medidor.find("X") == 1:
+                        ciente_do_medidorf = "Sim"
+                    elif ciente_do_medidor.find("X") == 6:
+                        ciente_do_medidorf = "Não"
+                    elif ciente_do_medidor.find("X") == -1:
+                        ciente_do_medidorf = "EM BRANCO"
+                    break
+                except:
+                    ciente_do_medidorf = "NÃO ENCONTRADA"
+    
+            #PG 40 --- EQUIPAMENTOS E QUANTIDADE 0 A 7500 ----------------------------------------------
+            faixa_1 = "EM BRANCO"
+            faixa_1list = ["0\\s*A\\s*7\\s*.\\s*5\\s*0\\s*0(.*?)7\\s*.\\s*5\\s*0\\s*1\\s*A\\s*1\\s*5\\s*.\\s*0\\s*0\\s*0"]
+            for i in faixa_1list:
+                try:
+                    s = texto_com_espaco
+                    faixa_1 = re.search(i, s)
+                    faixa_1 = faixa_1.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    faixa_1 = "NÃO ENCONTRADA"
+            try:
+                if len(faixa_1) <1:
+                    faixa_1 = "EM BRANCO"
+            except:
+                pass
+
+            #PG 41 --- EQUIPAMENTOS E QUANTIDADE 7501 A 15000 ----------------------------------------------
+            faixa_2 = "EM BRANCO"
+            faixa_2list = ["7\\s*.\\s*5\\s*0\\s*1\\s*A\\s*1\\s*5\\s*.\\s*0\\s*0\\s*0(.*?)1\\s*5\\s*.\\s*0\\s*0\\s*1\\s*A\\s*2\\s*2\\s*.\\s*5\\s*0\\s*0"]
+            for i in faixa_2list:
+                try:
+                    s = texto_com_espaco
+                    faixa_2 = re.search(i, s)
+                    faixa_2 = faixa_2.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    faixa_2 = "NÃO ENCONTRADA"
+            try:
+                if len(faixa_2) <1:
+                    faixa_2 = "EM BRANCO"
+            except:
+                pass
+
+            #PG 42 --- EQUIPAMENTOS E QUANTIDADE 15001 A 22500 ----------------------------------------------
+            faixa_3 = "EM BRANCO"
+            faixa_3list = ["1\\s*5\\s*.\\s*0\\s*0\\s*1\\s*A\\s*2\\s*2\\s*.\\s*5\\s*0\\s*0(.*?)2\\s*2\\s*.\\s*5\\s*0\\s*1\\s*A\\s*3\\s*0\\s*.\\s*0\\s*0\\s*0"]
+            for i in faixa_3list:
+                try:
+                    s = texto_com_espaco
+                    faixa_3 = re.search(i, s)
+                    faixa_3 = faixa_3.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    faixa_3 = "NÃO ENCONTRADA"
+            try:
+                if len(faixa_3) <1:
+                    faixa_3 = "EM BRANCO"
+            except:
+                pass
+
+            #PG 43 --- EQUIPAMENTOS E QUANTIDADE 22501 A 30000 ----------------------------------------------
+            faixa_4 = "EM BRANCO"
+            faixa_4list = ["2\\s*2\\s*.\\s*5\\s*0\\s*1\\s*A\\s*3\\s*0\\s*.\\s*0\\s*0\\s*0(.*?)A\\s*C\\s*I\\s*M\\s*A\\s*D\\s*E\\s*3\\s*0\\s*.\\s*0\\s*0\\s*0"]
+            for i in faixa_4list:
+                try:
+                    s = texto_com_espaco
+                    faixa_4 = re.search(i, s)
+                    faixa_4 = faixa_4.group(1).strip().replace("  ", " ")
+                    break
+                except:
+                    faixa_4 = "NÃO ENCONTRADA"
+            try:
+                if len(faixa_4) <1:
+                    faixa_4 = "EM BRANCO"
+            except:
+                pass
+
+            #PG 44 --- EQUIPAMENTOS E QUANTIDADE Acima de 30000 ----------------------------------------------
+            faixa_5 = "EM BRANCO"
+            faixa_5list = ["A\\s*C\\s*I\\s*M\\s*A\\s*D\\s*E\\s*3\\s*0\\s*.\\s*0\\s*0\\s*0(.*?)F\\s*I\\s*Q\\s*U\\s*E\\s*A\\s*T\\s*E\\s*N\\s*T\\s*O"]
+            for i in faixa_5list:
+                try:
+                    s = texto_com_espaco
+                    faixa_5 = re.search(i, s)
+                    faixa_5 = faixa_5.group(1).strip().replace("  ", " ").replace("22.501A30.000", "").replace("15.001A22.500", "").replace("7.501A15.0000", "").replace("15.0000A7.500", "")
+                    if len(faixa_5) <1:
+                        faixa_5 = "EM BRANCO"
+                        break
+                    else:
+                        break
+                except:
+                    faixa_5 = "NÃO ENCONTRADA"
+            try:
+                if len(faixa_5) <1:
+                    faixa_5 = "EM BRANCO"
+            except:
+                pass
+            print("PGS ok")
+            try:
+                wb = load_workbook('OUTPUT.xlsx')
+                ws = wb.active
+                time.sleep(2)
+                to_append = ["1.OUT", protocolo, nomearq, nome_completo, rede, pessoa_fis_jur, rg_form, cpf_valido, emiss, uf_emissao, orgao_expedidor
+                             , data_de_nascimento, local_de_nascimento, nacionalidade, estado_civilf, sexo, nome_da_empresa, cnpj
+                             , incricao_mun_est, contribuinte_simples, contrato_reat_anterior, endereco, numero, complemento, bairro, cep
+                             , municipio, medidor_vizinho, tipo_ligacao, carga_total, tipo_do_imovel, atv_principal, tipo_de_atv_principal
+                             , ponto_de_referencia, procurar_por, telefone, email, fatura_por_email, data_boa, data_boadf, cadastro_tarifa_socialf
+                             , numero_nis, carga_declaradaf, ciente_do_medidorf, faixa_1, faixa_2, faixa_3, faixa_4, faixa_5, texto_modelo, credenciado_responsavel, posto_html, abertura_html, localidade_html]
+                ws.append(to_append)
+                time.sleep(2)
+                wb.save('OUTPUT.xlsx')
+                print("Salvo")
+            except:
+                wb = load_workbook('OUTPUT.xlsx')
+                ws = wb.active
+                time.sleep(2)
+                to_append = ["1.ERRO", "Erro no append"]
+                ws.append(to_append)
+                time.sleep(1)
+                wb.save('OUTPUT.xlsx')
+                time.sleep(1)
+                continue
+            continue
+        else:
+            print("Protocolo ", protocolo, " - não tem formulário para extração")
+            wb = load_workbook('OUTPUT.xlsx')
+            ws = wb.active
+            to_append = ["1.ERRO", protocolo, "FORMULÁRIO NÃO EXISTE OU ESTÁ COM ERRO"]
+            ws.append(to_append)
+            wb.save('OUTPUT.xlsx')
+            navegador.switch_to.default_content()
+            navegador.get("http://saw-coelba/atendimento/Pages/fale-conosco-view.aspx")
+            continue
+    except:
+        print("Protocolo ", protocolo, " - não tem formulário para extração")
+        wb = load_workbook('OUTPUT.xlsx')
+        ws = wb.active
+        to_append = ["1.ERRO", protocolo, "FORMULÁRIO NÃO ENCONTRADO/FORA DE PADRÃO"]
+        ws.append(to_append)
+        wb.save('OUTPUT.xlsx')
+        navegador.get("http://saw-coelba/Pages/Default.aspx")
+        navegador.switch_to.default_content()
+        continue
